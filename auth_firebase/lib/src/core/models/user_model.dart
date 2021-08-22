@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+UserModel? globaUserModel;
+
 class UserModel {
   final String name;
   final String email;

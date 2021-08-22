@@ -3,8 +3,10 @@ import 'package:auth_firebase/src/core/themes/app_fonts/app_fonts.dart';
 import 'package:auth_firebase/src/core/widgets/custom_button_widget.dart';
 import 'package:auth_firebase/src/core/widgets/custom_passwordfield_widget.dart';
 import 'package:auth_firebase/src/core/widgets/custom_textfield_widget.dart';
+import 'package:auth_firebase/src/core/widgets/register_button_widget.dart';
 import 'package:auth_firebase/src/modules/auth/auth_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -14,12 +16,29 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final controller = AuthController();
   TextEditingController emailController = TextEditingController();
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmedController = TextEditingController();
   bool obscure = true;
+
+  late final AuthController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = context.read<AuthController>();
+
+    controller.addListener(() {
+      if (controller.state == AuthState.erro) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Erro no Cadastro')));
+      } else if (controller.state == AuthState.sucess) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -86,20 +105,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   children: [
                     Container(
-                      width: size.width * 0.4,
-                      child: CustomButtonWidget(
-                        color: AppColors.darkBlue,
-                        hint: 'Cadastrar',
-                        textStyle: AppFonts.robotobold20,
-                        onPressed: () async {
-                           await controller.signup(
-                              emailController.text,
-                              passwordController.text,
-                              nameController.text);
-                          Navigator.pushNamed(context, "/login");
-                        },
-                      ),
-                    ),
+                        width: size.width * 0.4,
+                        child: RegisterButtonWidget(
+                          email: emailController.text,
+                          password: passwordController.text,
+                          confirmed: confirmedController.text,
+                          name: nameController.text,
+                        )),
                     Container(
                       width: size.width * 0.4,
                       child: CustomButtonWidget(

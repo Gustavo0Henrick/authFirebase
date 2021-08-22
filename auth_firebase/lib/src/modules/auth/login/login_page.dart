@@ -1,12 +1,12 @@
-import 'package:auth_firebase/src/core/models/user_model.dart';
 import 'package:auth_firebase/src/core/themes/app_colors/app_colors.dart';
 import 'package:auth_firebase/src/core/themes/app_fonts/app_fonts.dart';
 import 'package:auth_firebase/src/core/widgets/custom_button_widget.dart';
 import 'package:auth_firebase/src/core/widgets/custom_passwordfield_widget.dart';
 import 'package:auth_firebase/src/core/widgets/custom_textfield_widget.dart';
+import 'package:auth_firebase/src/core/widgets/auth_button_widget.dart';
 import 'package:auth_firebase/src/modules/auth/auth_controller.dart';
-import 'package:auth_firebase/src/modules/home/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -16,10 +16,27 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final controller = AuthController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool obscure = true;
+
+  late final AuthController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = context.read<AuthController>();
+
+    controller.addListener(() {
+      if (controller.state == AuthState.erro) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Erro na autenticação')));
+      } else if (controller.state == AuthState.sucess) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -75,24 +92,11 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Container(
                       width: size.width * 0.4,
-                      child: CustomButtonWidget(
-                          color: AppColors.white,
-                          hint: 'Entrar',
-                          textStyle: AppFonts.robotobold20blue,
-                          onPressed: () async {
-                            var response = await controller.signin(
-                                emailController.text, passwordController.text);
-                            print(response);
-                            var user = await UserModel(response.displayName,
-                                response.email, response.uid);
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (builder) => HomePage(
-                                    user: user,
-                                  ),
-                                ));
-                          }),
+                      child: AuthButtonWidget(
+                      
+                        email: emailController.text,
+                        password: passwordController.text,
+                      ),
                     ),
                     Container(
                       width: size.width * 0.4,
